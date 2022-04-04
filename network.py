@@ -35,12 +35,13 @@ def build_graph():
             best_node = i
         
     print("most common:", best_node, "; amount:", max_edges)
+    
     # create heat map
     for e in edges:
         amount = edges.count(e)
         colors.append([amount/max_edges, 0, 0]) # create a shade of red, based on how often this one appears relative to most common
         # ie if max_edges is 30 and this is 15, then this color will be [127.5, 0, 0], 0<c<1
-    print(len(edges), len(colors))
+        # .: black < amount < red
 
     return g, colors
 
