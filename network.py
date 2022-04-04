@@ -35,7 +35,7 @@ def build_graph():
             best_node = i
         
     print("most common:", best_node, "; amount:", max_edges)
-    
+
     # create heat map
     for e in edges:
         amount = edges.count(e)
