@@ -1,10 +1,12 @@
 import dgl
 import pandas as pd
 import csv
+import numpy as np
+import torch as th
 
 def build_graph():
     g = dgl.DGLGraph()
-    with open('./formatted_bigFlowsTest.csv') as f: # for now convert to index list by hand
+    with open('./formatted_bfwppTest.csv') as f: # for now convert to index list by hand
         network_data=[tuple(line) for line in csv.reader(f)]
     network_data=network_data[1:]
 
@@ -15,12 +17,30 @@ def build_graph():
     print(n_nodes)
 
     edges = []
+    dst_ports = []
+    src_ports = []
     for str_tup in network_data:
         edges.append(tuple((int(str_tup[0]), int(str_tup[1]))))
+        # get dst port
+        if (str_tup[2].isdigit()):
+            dst_ports.append(int(str_tup[2])) # the dst port
+        else: # if doesnt have a port
+            dst_ports.append(-1) # dummy
+        # get src port
+        if (str_tup[3].isdigit()):
+            src_ports.append(int(str_tup[3])) # the src port
+        else: # if doesnt have a port
+            src_ports.append(-1) # dummy
     g.add_nodes(n_nodes) # essentially the same
     src, dst = tuple(zip(*edges))
     g.add_edges(src, dst)
-    g.add_edges(dst, src)
+    g.add_edges(dst, src) # i dont think this needed
+
+    # add features
+    ports = dst_ports + src_ports # combined of ports, i do dst+src ports to match src+dst ips, is this right, always go to end edge port
+    th_ports = th.tensor(ports)
+    g.edata['port'] = th_ports
+    print(g.edata['port'])
 
     # get colors for a heatmap
     max_edges = 0
