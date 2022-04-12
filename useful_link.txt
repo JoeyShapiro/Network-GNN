@@ -4,3 +4,12 @@ https://stackoverflow.com/questions/8092380/export-pcap-data-to-csv-timestamp-by
 https://wiki.wireshark.org/SampleCaptures
 https://www.netresec.com/?page=PcapFiles
 https://github.com/JoeyShapiro/Network-GNN <- AWESOME GUY, Great knowledge
+https://docs.dgl.ai/tutorials/blitz/5_graph_classification.html#sphx-glr-tutorials-blitz-5-graph-classification-py
+https://ant.isi.edu/datasets/
+https://ieee-dataport.org/keywords/network-traffic-dataset
+https://ant.isi.edu/datasets/readmes/long_flows_D1_2_days-anonymized-20090605.README.txt
+https://ant.isi.edu/datasets/readmes/DARPA_2009_DDoS_attack-20091105.README.txt
+https://www.stratosphereips.org/datasets-iot23
+https://www.kaggle.com/competitions/ades-2021/overview
+https://docs.dgl.ai/en/0.6.x/guide/graph.html
+https://docs.dgl.ai/en/0.6.x/guide/training-edge.html#predicting-edge-type-of-an-existing-edge-on-a-heterogeneous-graph
