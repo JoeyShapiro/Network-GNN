@@ -2,8 +2,9 @@
 # gets the data we have and concvert to a csv of what we need
 # [ip_src, ip_dst, weight(cnt_pkt)]
 import numpy as np
+from tqdm import tqdm
 
-file = '/Volumes/T7 Touch/ITS472/project 2/opt/Malware-Project/BigDataset/IoTScenarios/CTU-Honeypot-Capture-4-1/bro/conn.log.labeled'
+file = '/Volumes/T7 Touch/ITS472/project 2/opt/Malware-Project/BigDataset/IoTScenarios/CTU-IoT-Malware-Capture-1-1/bro/conn.log.labeled'
 delim = '\x09' # the separator of each item
 start = 6 # INDEX so start line - 1
 good_stuff = []
@@ -26,7 +27,8 @@ with open(file) as f:
     out_csv.write(','.join(fields) + ',cnt' + '\n') # convert to comma separated string and append. should i keep as 2D list, or keep as 1D<string>
 
     next(f) # skip line with field data types
-    for line in f.readlines():
+    for line in (pbar := tqdm(f.readlines())):
+        pbar.set_description('Reading File')
         if line.startswith('#close'): # stop before file ends
             break
         line = line.split(delim)
@@ -41,14 +43,16 @@ with open(file) as f:
 
     # create a new list of connectinos and the amount of times they connect
     unique_cnt = [] # just create a second array, ratehr than a 2D array of [[conn], cnt], then checking for conn, then cnt++, lss cant check if in only 1 column
-    for conn in data:
+    for conn in (pbar := tqdm(data)):
+        pbar.set_description('Creating Index')
         if conn not in unique_conns:
             unique_conns.append(conn)
             unique_cnt.append(0)
         unique_cnt[unique_conns.index(conn)] += 1 # inc the count by 1
         # ^ super smart. where the conn is stored in the first column, so find its index..
         
-    for i in range(len(unique_conns)):
+    for i in (pbar := tqdm(range(len(unique_conns)))):
+        pbar.set_description('Writing to csv')
         newline = ','.join(unique_conns[i]) + ',' + str(unique_cnt[i]) + '\n'
         # ^ i think this is super cleaver. i think it worked, WHERE IS MY DIPLOMA
         out_csv.write(newline)
