@@ -31,18 +31,18 @@ def build_graph():
     print(th_cnts)
 
     # get colors for a heatmap
-    max_edges = max(cnts)
+    max_cnt = max(cnts)
     colors = [] # good
 
     # create heat map
     for amount in cnts:
-        colors.append([amount/max_edges, 0, 0]) # create a shade of red, based on how often this one appears relative to most common
-        # ie if max_edges is 30 and this is 15, then this color will be [127.5, 0, 0], 0<c<1
+        colors.append([amount/max_cnt, 0, 0]) # create a shade of red, based on how often this one appears relative to most common
+        # ie if max_cnt is 30 and this is 15, then this color will be [127.5, 0, 0], 0<c<1
         # .: black < amount < red
 
-    return g, colors
+    return g, colors, cnts
 
-G, colors = build_graph() # outside function
+G, colors, weights = build_graph() # outside function
 print('We have %d nodes.' % G.number_of_nodes())
 print('We have %d edges.' % G.number_of_edges())
 
@@ -50,8 +50,16 @@ import networkx as nx
 # Since the actual graph is undirected, we convert it for visualization
 # purpose.
 nx_G = G.to_networkx().to_undirected()
+i = 0
+for src, dst in nx_G.edges():
+    nx_G[src][dst][0]['label'] = weights[i]
+    i+=1 # good ol fashioned incrementor
 # Kamada-Kawaii layout usually looks pretty for arbitrary graphs
 pos = nx.kamada_kawai_layout(nx_G)
 nx.draw(nx_G, pos, with_labels=True, node_color=[[.7, .7, .7]], edge_color=colors)
+# edge weight labels
+# edge_labels = nx.get_edge_attributes(nx_G, 'weight') # CANT WORK WITH MULTIGRAPH
+# nx.draw_networkx_edge_labels(nx_G, pos, edge_labels)
+nx.drawing.nx_pydot.write_dot(nx_G, 'multi.dot')
 import matplotlib.pyplot as plt
 plt.show()
