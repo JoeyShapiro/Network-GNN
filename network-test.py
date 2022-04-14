@@ -6,7 +6,7 @@ import torch as th
 
 def build_graph():
     g = dgl.DGLGraph()
-    with open('/Volumes/T7 Touch/ITS472/project 2/opt/Malware-Project/BigDataset/IoTScenarios/CTU-IoT-Malware-Capture-8-1/bro/conn.log.labeled_formatted.csv') as f: # for now convert to index list by hand
+    with open('./conn.log.labeled_formatted.csv') as f: # for now convert to index list by hand
         network_data=[tuple(line) for line in csv.reader(f)]
     network_data=network_data[1:] # skip the labels
 
