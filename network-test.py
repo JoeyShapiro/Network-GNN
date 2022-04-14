@@ -6,7 +6,7 @@ import torch as th
 
 def build_graph():
     g = dgl.DGLGraph()
-    with open('/Volumes/T7 Touch/ITS472/project 2/opt/Malware-Project/BigDataset/IoTScenarios/CTU-Honeypot-Capture-4-1/bro/conn_formatted.csv') as f: # for now convert to index list by hand
+    with open('/Volumes/T7 Touch/ITS472/project 2/opt/Malware-Project/BigDataset/IoTScenarios/CTU-IoT-Malware-Capture-8-1/bro/conn.log.labeled_formatted.csv') as f: # for now convert to index list by hand
         network_data=[tuple(line) for line in csv.reader(f)]
     network_data=network_data[1:] # skip the labels
 
@@ -20,7 +20,7 @@ def build_graph():
     cnts = []
     for str_tup in network_data:
         edges.append(tuple((int(str_tup[0]), int(str_tup[1]))))
-        cnts.append(int(str_tup[2]))
+        cnts.append(int(str_tup[3]))
     g.add_nodes(n_nodes) # essentially the same
     src, dst = tuple(zip(*edges))
     g.add_edges(src, dst)
@@ -63,3 +63,4 @@ nx.draw(nx_G, pos, with_labels=True, node_color=[[.7, .7, .7]], edge_color=color
 nx.drawing.nx_pydot.write_dot(nx_G, 'multi.dot')
 import matplotlib.pyplot as plt
 plt.show()
+
