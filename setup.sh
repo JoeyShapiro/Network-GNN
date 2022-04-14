@@ -8,3 +8,4 @@ conda install pytorch torchvision torchaudio cudatoolkit11.3 -c pytorch
 conda install pandas matplotlib
 conda install -c dglteam dgl-cuda11.3
 conda install -c anaconda pydot
+conda install -c stellargraph stellargraph
