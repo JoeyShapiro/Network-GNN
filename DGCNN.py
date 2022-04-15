@@ -31,6 +31,16 @@ def build_graph(file):
         network_data=[tuple(line) for line in csv.reader(f)]
     network_data=network_data[1:] # skip the labels
 
+    # get the max index
+    n_nodes = int(max(max(network_data))) + 1 # super clever :P . max returns str i guess
+    #            ^     ^
+    #    max of tpl    max tpl of list    ^ convert from index to len
+    print(n_nodes)
+
+    # best way?
+    for i in range(n_nodes):
+        g.add_node(i, feature=1)
+
     edges = []
     cnts = []
     mask = []
@@ -61,6 +71,7 @@ def build_graph(file):
     return g, heatmap
 
 # ///////////// LOAD INTO NETWORKX ///////////////////
+print('creating networks')
 nx_G, heatmap = build_graph('./conn.log.labeled_formatted2.csv') # outside function
 
 # Since the actual graph is undirected, we convert it for visualization
@@ -76,8 +87,7 @@ import matplotlib.pyplot as plt
 plt.show()
 
 # ///////////////// LOAD GRAPHS /////////////////
-dataset = datasets.PROTEINS()
-display(HTML(dataset.description))
+print('Loading graphs')
 nx_G2, _heatmap = build_graph('./conn.log.labeled_formatted2.csv')
 graphs = [ StellarGraph.from_networkx(nx_G), StellarGraph.from_networkx(nx_G2) ]
 graph_labels = pd.Series([ 2, 1 ], copy=False)
@@ -90,8 +100,13 @@ summary = pd.DataFrame(
 summary.describe().round(1)
 
 graph_labels = pd.get_dummies(graph_labels, drop_first=True)
+
+# /////////// GENERATING ///////////////
+print('Generating')
 generator = PaddedGraphGenerator(graphs=graphs)
 
+# ////////////// KERAS MODEL ///////////////////
+print('Creating keras model')
 k = 35  # the number of rows for the output tensor
 layer_sizes = [32, 32, 32, 1]
 
@@ -123,6 +138,7 @@ model.compile(
 )
 
 # ////////////// TRAIN //////////////////
+print('training')
 train_graphs, test_graphs = model_selection.train_test_split(
     graph_labels, train_size=0.9, test_size=None, stratify=graph_labels,
 )
