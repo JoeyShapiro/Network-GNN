@@ -22,73 +22,52 @@ import pandas as pd
 import csv
 import numpy as np
 import torch as th
+import networkx as nx
 
 # /////////////////////// CREATE GRAPHS FUNCTION ///////////////////
 def build_graph(file):
-    g = dgl.DGLGraph()
+    g = nx.Graph() # would use DGL, but kinda bad
     with open(file) as f: # for now convert to index list by hand
         network_data=[tuple(line) for line in csv.reader(f)]
     network_data=network_data[1:] # skip the labels
-
-    # get the max index
-    n_nodes = int(max(max(network_data))) + 1 # super clever :P . max returns str i guess
-    #            ^     ^
-    #    max of tpl    max tpl of list    ^ convert from index to len
-    print(n_nodes)
 
     edges = []
     cnts = []
     mask = []
     for str_tup in network_data:
         edges.append(tuple((int(str_tup[0]), int(str_tup[1]))))
-        if str_tup[2] == 'Malicious':
+        if str_tup[2] == 1.0: # if malicious, change threshold
             mask.append(1)
         else:
             mask.append(0)
         cnts.append(int(str_tup[3]))
-    g.add_nodes(n_nodes) # essentially the same
     src, dst = tuple(zip(*edges))
-    g.add_edges(src, dst)
-
-    # add features
-    th_cnts = th.tensor(cnts)
-    g.edata['w'] = th_cnts
-    print(th_cnts)
 
     # get colors for a heatmap
     max_cnt = max(cnts)
-    colors = [] # good
+    heatmap = [] # good
+    weights = []
 
     # create heat map
-    for amount in cnts:
-        colors.append([amount/max_cnt, 0, 0]) # create a shade of red, based on how often this one appears relative to most common
+    for i in range(len(edges)):
+        heatmap.append([cnts[i]/max_cnt, 0, 0]) # create a shade of red, based on how often this one appears relative to most common
+        weights.append(cnts[i]/max_cnt)
         # ie if max_cnt is 30 and this is 15, then this color will be [127.5, 0, 0], 0<c<1
         # .: black < amount < red
 
-    # synthetic node and edge features, as well as edge labels
-    g.ndata['feature'] = th.ones(10)
-    g.edata['label'] = th_cnts
-    # synthetic train-validation-test splits
-    g.edata['train_mask'] = th.tensor(mask) # th.zeros(15, dtype=th.bool).bernoulli(0.6)
+    weighted_edges = zip(src, dst, weights)
+    g.add_weighted_edges_from(weighted_edges)
 
-    return g, colors, cnts
-
-G, colors, weights = build_graph('./conn.log.labeled_formatted2.csv') # outside function
-print('We have %d nodes.' % G.number_of_nodes())
-print('We have %d edges.' % G.number_of_edges())
+    return g, heatmap
 
 # ///////////// LOAD INTO NETWORKX ///////////////////
-import networkx as nx
+nx_G, heatmap = build_graph('./conn.log.labeled_formatted2.csv') # outside function
+
 # Since the actual graph is undirected, we convert it for visualization
 # purpose.
-nx_G = G.to_networkx().to_undirected()
-i = 0
-for src, dst in nx_G.edges():
-    nx_G[src][dst][0]['label'] = weights[i]
-    i+=1 # good ol fashioned incrementor
 # Kamada-Kawaii layout usually looks pretty for arbitrary graphs
 pos = nx.kamada_kawai_layout(nx_G)
-nx.draw(nx_G, pos, with_labels=True, node_color=[[.7, .7, .7]], edge_color=colors)
+nx.draw(nx_G, pos, with_labels=True, node_color=[[.7, .7, .7]], edge_color=heatmap)
 # edge weight labels
 # edge_labels = nx.get_edge_attributes(nx_G, 'weight') # CANT WORK WITH MULTIGRAPH
 # nx.draw_networkx_edge_labels(nx_G, pos, edge_labels)
@@ -99,11 +78,10 @@ plt.show()
 # ///////////////// LOAD GRAPHS /////////////////
 dataset = datasets.PROTEINS()
 display(HTML(dataset.description))
-graphs = [ StellarGraph.from_networkx(nx_G) ]
-graph_labels = [ 'Malicious' ]
-graphs, graph_labels = dataset.load()
-print(graph_labels)
-print(graphs[0].info())
+nx_G2, _heatmap = build_graph('./conn.log.labeled_formatted2.csv')
+graphs = [ StellarGraph.from_networkx(nx_G), StellarGraph.from_networkx(nx_G2) ]
+graph_labels = pd.Series([ 2, 1 ], copy=False)
+#graphs, graph_labels = dataset.load()
 
 summary = pd.DataFrame(
     [(g.number_of_nodes(), g.number_of_edges()) for g in graphs],
