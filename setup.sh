@@ -21,3 +21,4 @@ pip install numpy==1.19.2
 pip install ~/Downloads/tensorflow-2.4.1-py3-none-any.whl
 conda install -c dglteam dgl
 pip install torch
+conda install -c anaconda gensim

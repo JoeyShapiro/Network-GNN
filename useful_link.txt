@@ -14,3 +14,4 @@ https://www.kaggle.com/competitions/ades-2021/overview
 https://docs.dgl.ai/en/0.6.x/guide/graph.html
 https://docs.dgl.ai/en/0.6.x/guide/training-edge.html#predicting-edge-type-of-an-existing-edge-on-a-heterogeneous-graph
 https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf
+https://stellargraph.readthedocs.io/en/stable/demos/#find-a-demo-for-an-algorithm
