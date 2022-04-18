@@ -139,151 +139,172 @@ graph_labels = pd.get_dummies(graph_labels, drop_first=True)
 # /////////// GENERATING ///////////////
 print('Generating')
 generator = PaddedGraphGenerator(graphs=graphs)
+# # ///////////////////////////////////////////////// GCN ///////////////////////////////
+# # /////////////// CREATING MODEL ////////////////
+# def create_graph_classification_model(generator):
+#     gc_model = GCNSupervisedGraphClassification(
+#         layer_sizes=[64, 64],
+#         activations=["relu", "relu"],
+#         generator=generator,
+#         dropout=0.5,
+#     )
+#     x_inp, x_out = gc_model.in_out_tensors()
+#     predictions = Dense(units=32, activation="relu")(x_out)
+#     predictions = Dense(units=16, activation="relu")(predictions)
+#     predictions = Dense(units=1, activation="sigmoid")(predictions)
 
-def create_graph_classification_model(generator):
-    gc_model = GCNSupervisedGraphClassification(
-        layer_sizes=[64, 64],
-        activations=["relu", "relu"],
-        generator=generator,
-        dropout=0.5,
-    )
-    x_inp, x_out = gc_model.in_out_tensors()
-    predictions = Dense(units=32, activation="relu")(x_out)
-    predictions = Dense(units=16, activation="relu")(predictions)
-    predictions = Dense(units=1, activation="sigmoid")(predictions)
+#     # Let's create the Keras model and prepare it for training
+#     model = Model(inputs=x_inp, outputs=predictions)
+#     model.compile(optimizer=Adam(0.005), loss=binary_crossentropy, metrics=["acc"])
 
-    # Let's create the Keras model and prepare it for training
-    model = Model(inputs=x_inp, outputs=predictions)
-    model.compile(optimizer=Adam(0.005), loss=binary_crossentropy, metrics=["acc"])
+#     return model
 
-    return model
+# # //////////// TRAINING ///////////////
+# epochs = 200  # maximum number of training epochs
+# folds = 2  # the number of folds for k-fold cross validation
+# n_repeats = 5  # the number of repeats for repeated k-fold cross validation
 
-epochs = 200  # maximum number of training epochs
-folds = 2  # the number of folds for k-fold cross validation
-n_repeats = 5  # the number of repeats for repeated k-fold cross validation
+# es = EarlyStopping(
+#     monitor="val_loss", min_delta=0, patience=25, restore_best_weights=True
+# )
 
-es = EarlyStopping(
-    monitor="val_loss", min_delta=0, patience=25, restore_best_weights=True
+# def train_fold(model, train_gen, test_gen, es, epochs):
+#     history = model.fit(
+#         train_gen, epochs=epochs, validation_data=test_gen, verbose=0, callbacks=[es],
+#     )
+#     # calculate performance on the test data and return along with history
+#     test_metrics = model.evaluate(test_gen, verbose=0)
+#     test_acc = test_metrics[model.metrics_names.index("acc")]
+
+#     return history, test_acc
+
+# def get_generators(train_index, test_index, graph_labels, batch_size):
+#     train_gen = generator.flow(
+#         train_index, targets=graph_labels.iloc[train_index].values, batch_size=batch_size
+#     )
+#     test_gen = generator.flow(
+#         test_index, targets=graph_labels.iloc[test_index].values, batch_size=batch_size
+#     )
+
+#     return train_gen, test_gen
+
+# test_accs = []
+
+# stratified_folds = model_selection.RepeatedStratifiedKFold(
+#     n_splits=folds, n_repeats=n_repeats
+# ).split(graph_labels, graph_labels)
+
+# for i, (train_index, test_index) in enumerate(stratified_folds):
+#     print(f"Training and evaluating on fold {i+1} out of {folds * n_repeats}...")
+#     train_gen, test_gen = get_generators(
+#         train_index, test_index, graph_labels, batch_size=30
+#     )
+
+#     model = create_graph_classification_model(generator)
+
+#     history, acc = train_fold(model, train_gen, test_gen, es, epochs)
+
+#     test_accs.append(acc)
+
+# print(
+#     f"Accuracy over all folds mean: {np.mean(test_accs)*100:.3}% and std: {np.std(test_accs)*100:.2}%"
+# )
+
+# plt.figure(figsize=(8, 6))
+# plt.hist(test_accs)
+# plt.xlabel("Accuracy")
+# plt.ylabel("Count")
+# plt.show()
+
+# ///////////////////////////////////////////// DGCNN //////////////////////////
+import stellargraph as sg
+from stellargraph.mapper import PaddedGraphGenerator
+from stellargraph.layer import DeepGraphCNN
+from stellargraph import StellarGraph
+
+from stellargraph import datasets
+
+from sklearn import model_selection
+from IPython.display import display, HTML
+
+from tensorflow.keras import Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Dense, Conv1D, MaxPool1D, Dropout, Flatten
+from tensorflow.keras.losses import binary_crossentropy
+import tensorflow as tf
+
+# ////////////// KERAS MODEL ///////////////////
+print('Creating keras model')
+k = 35  # the number of rows for the output tensor
+layer_sizes = [32, 32, 32, 1]
+
+dgcnn_model = DeepGraphCNN(
+    layer_sizes=layer_sizes,
+    activations=["tanh", "tanh", "tanh", "tanh"],
+    k=k,
+    bias=False,
+    generator=generator,
+)
+x_inp, x_out = dgcnn_model.in_out_tensors()
+
+x_out = Conv1D(filters=16, kernel_size=sum(layer_sizes), strides=sum(layer_sizes))(x_out)
+x_out = MaxPool1D(pool_size=2)(x_out)
+
+x_out = Conv1D(filters=32, kernel_size=5, strides=1)(x_out)
+
+x_out = Flatten()(x_out)
+
+x_out = Dense(units=128, activation="relu")(x_out)
+x_out = Dropout(rate=0.5)(x_out)
+
+predictions = Dense(units=1, activation="sigmoid")(x_out)
+
+model = Model(inputs=x_inp, outputs=predictions)
+
+model.compile(
+    optimizer=Adam(lr=0.0001), loss=binary_crossentropy, metrics=["acc"],
 )
 
-def train_fold(model, train_gen, test_gen, es, epochs):
-    history = model.fit(
-        train_gen, epochs=epochs, validation_data=test_gen, verbose=0, callbacks=[es],
-    )
-    # calculate performance on the test data and return along with history
-    test_metrics = model.evaluate(test_gen, verbose=0)
-    test_acc = test_metrics[model.metrics_names.index("acc")]
-
-    return history, test_acc
-
-def get_generators(train_index, test_index, graph_labels, batch_size):
-    train_gen = generator.flow(
-        train_index, targets=graph_labels.iloc[train_index].values, batch_size=batch_size
-    )
-    test_gen = generator.flow(
-        test_index, targets=graph_labels.iloc[test_index].values, batch_size=batch_size
-    )
-
-    return train_gen, test_gen
-
-test_accs = []
-
-stratified_folds = model_selection.RepeatedStratifiedKFold(
-    n_splits=folds, n_repeats=n_repeats
-).split(graph_labels, graph_labels)
-
-for i, (train_index, test_index) in enumerate(stratified_folds):
-    print(f"Training and evaluating on fold {i+1} out of {folds * n_repeats}...")
-    train_gen, test_gen = get_generators(
-        train_index, test_index, graph_labels, batch_size=30
-    )
-
-    model = create_graph_classification_model(generator)
-
-    history, acc = train_fold(model, train_gen, test_gen, es, epochs)
-
-    test_accs.append(acc)
-
-print(
-    f"Accuracy over all folds mean: {np.mean(test_accs)*100:.3}% and std: {np.std(test_accs)*100:.2}%"
+# ////////////// TRAIN //////////////////
+print('training')
+train_graphs, test_graphs = model_selection.train_test_split(
+    graph_labels, train_size=0.5, test_size=2, stratify=graph_labels,
 )
 
-plt.figure(figsize=(8, 6))
-plt.hist(test_accs)
-plt.xlabel("Accuracy")
-plt.ylabel("Count")
-plt.show()
+gen = PaddedGraphGenerator(graphs=graphs)
 
+train_gen = gen.flow(
+    list(train_graphs.index - 1),
+    targets=train_graphs.values,
+    batch_size=50,
+    symmetric_normalization=False,
+)
 
+test_gen = gen.flow(
+    list(test_graphs.index - 1),
+    targets=test_graphs.values,
+    batch_size=1,
+    symmetric_normalization=False,
+)
 
+epochs = 10
 
+history = model.fit(
+    train_gen, epochs=epochs, verbose=1, validation_data=test_gen, shuffle=True,
+)
 
+sg.utils.plot_history(history)
 
+test_metrics = model.evaluate(test_gen)
+print("\nTest Set Metrics:")
+for name, val in zip(model.metrics_names, test_metrics):
+    print("\t{}: {:0.4f}".format(name, val))
 
-
-# # ////////////// KERAS MODEL ///////////////////
-# print('Creating keras model')
-# k = 35  # the number of rows for the output tensor
-# layer_sizes = [32, 32, 32, 1]
-
-# dgcnn_model = DeepGraphCNN(
-#     layer_sizes=layer_sizes,
-#     activations=["tanh", "tanh", "tanh", "tanh"],
-#     k=k,
-#     bias=False,
-#     generator=generator,
-# )
-# x_inp, x_out = dgcnn_model.in_out_tensors()
-
-# x_out = Conv1D(filters=16, kernel_size=sum(layer_sizes), strides=sum(layer_sizes))(x_out)
-# x_out = MaxPool1D(pool_size=2)(x_out)
-
-# x_out = Conv1D(filters=32, kernel_size=5, strides=1)(x_out)
-
-# x_out = Flatten()(x_out)
-
-# x_out = Dense(units=128, activation="relu")(x_out)
-# x_out = Dropout(rate=0.5)(x_out)
-
-# predictions = Dense(units=1, activation="sigmoid")(x_out)
-
-# model = Model(inputs=x_inp, outputs=predictions)
-
-# model.compile(
-#     optimizer=Adam(lr=0.0001), loss=binary_crossentropy, metrics=["acc"],
-# )
-
-# # ////////////// TRAIN //////////////////
-# print('training')
-# train_graphs, test_graphs = model_selection.train_test_split(
-#     graph_labels, train_size=0.9, test_size=None, stratify=graph_labels,
-# )
-
-# gen = PaddedGraphGenerator(graphs=graphs)
-
-# train_gen = gen.flow(
-#     list(train_graphs.index - 1),
-#     targets=train_graphs.values,
-#     batch_size=50,
-#     symmetric_normalization=False,
-# )
-
-# test_gen = gen.flow(
-#     list(test_graphs.index - 1),
-#     targets=test_graphs.values,
-#     batch_size=1,
-#     symmetric_normalization=False,
-# )
-
-# epochs = 10
-
-# history = model.fit(
-#     train_gen, epochs=epochs, verbose=1, validation_data=test_gen, shuffle=True,
-# )
-
-# sg.utils.plot_history(history)
-
-# test_metrics = model.evaluate(test_gen)
-# print("\nTest Set Metrics:")
-# for name, val in zip(model.metrics_names, test_metrics):
-#     print("\t{}: {:0.4f}".format(name, val))
+from sklearn import preprocessing, model_selection
+all_gen = generator.flow(graphs)
+all_predictions = model.predict(all_gen)
+target_encoding = preprocessing.LabelBinarizer()
+target_encoding.fit(graph_labels)
+graph_predictions = target_encoding.inverse_transform(all_predictions.squeeze())
+df = pd.DataFrame({"Predicted": graph_predictions, "True": graph_labels[2].values.tolist()})
+print(df.head(20))
