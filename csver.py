@@ -4,7 +4,7 @@
 import numpy as np
 from tqdm import tqdm
 
-file = './conn.log.labeled'
+file = '/Volumes/T7 Touch/ITS472/project 2/opt/Malware-Project/BigDataset/IoTScenarios/CTU-Honeypot-Capture-5-1/bro/conn.log.labeled'
 delim = '\x09' # the separator of each item
 start = 6 # INDEX so start line - 1
 good_stuff = []
