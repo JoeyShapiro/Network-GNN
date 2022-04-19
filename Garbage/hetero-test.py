@@ -1,4 +1,5 @@
 from cProfile import label
+import enum
 import pandas as pd
 import numpy as np
 
@@ -78,8 +79,9 @@ def build_hetero_graph(file):
 
     # get colors for a heatmap
     max_cnt = max(cnts)
-    heatmap = [] # good
+    heatmap = [] # good, has to be dict, somehow, after init, the edges get shuffled, best fix is dict
     weights = []
+    edge_colors = {}
 
     # create heat map
     for i in range(len(edges)):
@@ -87,12 +89,16 @@ def build_hetero_graph(file):
         weights.append(cnts[i]/max_cnt)
         # ie if max_cnt is 30 and this is 15, then this color will be [127.5, 0, 0], 0<c<1
         # .: black < amount < red
+    
+    for i, conn in enumerate(edges):
+        edge_colors[conn] = heatmap[i]
 
     weighted_edges = zip(src, dst, weights)
     g.add_weighted_edges_from(weighted_edges)
     # nx.set_node_attributes(g, )
     nx.set_node_attributes(g, node_labels, "label")
     nx.set_node_attributes(g, node_features, "feature")
+    nx.set_edge_attributes(g, edge_colors, "color") # for the heatmap
 
     return (g, heatmap, node_colors)
 
@@ -113,7 +119,8 @@ for file in files:
 # purpose.
 # Kamada-Kawaii layout usually looks pretty for arbitrary graphs
 pos = nx.kamada_kawai_layout(nx_Gs[0])
-nx.draw(nx_Gs[0], pos, with_labels=True, node_color=_graph_node_colors[0], edge_color=_heatmaps[0])
+edge_colors = nx.get_edge_attributes(nx_Gs[0], 'color').values() # smart i thinkk, can get rid of other stuff
+nx.draw(nx_Gs[0], pos, with_labels=True, node_color=_graph_node_colors[0], edge_color=edge_colors)
 # edge weight labels
 # edge_labels = nx.get_edge_attributes(nx_G, 'weight') # CANT WORK WITH MULTIGRAPH
 # nx.draw_networkx_edge_labels(nx_G, pos, edge_labels)
