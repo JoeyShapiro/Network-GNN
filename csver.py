@@ -16,6 +16,7 @@ data = []
 unique_conns = [] # find cleaner way
 label = []
 train_mask = []
+port = []
 
 with open(file) as f:
     # skip first few lines
@@ -26,6 +27,7 @@ with open(file) as f:
     # ^ could add '1' to numpy list, but this is smarter
     fields = [ c for c in columns if columns.index(c) in rows ] # for each column in columns, add to fields, if column index is in the needed rows
     fields.append(columns[20].split()[1]) # this is the label
+    fields.append(columns[5]) # this is the port
     print('fields:', fields)
     out_csv.write(','.join(fields) + ',cnt' + '\n') # convert to comma separated string and append. should i keep as 2D list, or keep as 1D<string>
 
@@ -44,6 +46,7 @@ with open(file) as f:
         connection = [ str(uniques.index(c)) for c in line if line.index(c) in rows ]
         data.append(connection) # find way to do in one line :P
         label.append(line[20].split()[1])
+        port.append(line[5])
 
     # create a new list of connectinos and the amount of times they connect
     unique_cnt = [] # just create a second array, ratehr than a 2D array of [[conn], cnt], then checking for conn, then cnt++, lss cant check if in only 1 column
@@ -61,11 +64,17 @@ with open(file) as f:
     for i, mask in enumerate(train_mask):
         train_mask[i] = mask / unique_cnt[i] # converts to weight, right
         
+    # n_nodes = int(max(max(unique_conns))) + 1
+    # for i in (pbar := tqdm(range(len(unique_conns)))):
+    #     pbar.set_description('Adding Conn Links')
+
+
     for i in (pbar := tqdm(range(len(unique_conns)))):
         pbar.set_description('Writing to csv')
         newline = ','.join(unique_conns[i]) + ',' + str(train_mask[i]) + ',' + str(unique_cnt[i]) + '\n'
         # ^ i think this is super cleaver. i think it worked, WHERE IS MY DIPLOMA
         out_csv.write(newline)
+    
 
 print("job done :)")
 

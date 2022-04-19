@@ -44,3 +44,5 @@ Then test.<br>
 Then predict.<br>
 
 ## ABOUT
+This uses a Deep Graph Convolution Neural Network (DGCNN) for the model.<br>
+The nodes are the IPs, and the edges have the amount of packets for connection as the edge.<br>
