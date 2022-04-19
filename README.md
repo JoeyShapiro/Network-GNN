@@ -33,7 +33,7 @@ Please refer to `csver.py`, to see my style format
 It should follow the format, and `csver.py` will either convert or help you the data.<br>
 The formatted files should go in a folder. The folder is marked in `DGCNN.py`, and will need a special format:<br>
 `dataset (you will need to change the path name in the GNN)<br>
--mal` (for mal network csvs)<br>
+-mal (for mal network csvs)<br>
 -bon` (for good network csvs)<br>
 ### Then Run GNN
 The GNN to use is `DGCNN.py`, at least as of now. give it the folder of datsets and watch it go.<br>
