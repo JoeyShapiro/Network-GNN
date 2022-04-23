@@ -3,7 +3,7 @@ from tqdm import tqdm
 
 df = pd.DataFrame()
 
-file = './conn.log.labeled'
+file = '/Volumes/T7 Touch/ITS472/project 2/opt/Malware-Project/BigDataset/IoTScenarios/CTU-IoT-Malware-Capture-21-1/bro/conn.log.labeled'
 
 start = 6
 delim = '\x09'
