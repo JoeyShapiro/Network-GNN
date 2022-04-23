@@ -63,8 +63,8 @@ def build_hetero_graph(file):
         else:
             mask.append(0)
             mask.append(0)
-        cnts.append(int(str_tup[4]))
-        cnts.append(int(str_tup[4])) # for each edge
+        cnts.append(int(str_tup[5]))
+        cnts.append(int(str_tup[5])) # for each edge
 
         node_labels[int(str_tup[0])] = 'ip' # smart
         node_colors[int(str_tup[0])] = [[.7, .7, .7]]
@@ -104,7 +104,7 @@ def build_hetero_graph(file):
 
 # ///////////// LOAD INTO NETWORKX ///////////////////
 print('creating networks')
-files = ['conn.log.labeled_reformatted2.csv']
+files = ['conn.log.labeled_reformatted.csv']
 
 nx_Gs = []
 _heatmaps = [] # find way to make one list
