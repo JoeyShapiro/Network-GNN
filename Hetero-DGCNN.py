@@ -224,7 +224,7 @@ train_graphs, test_graphs = model_selection.train_test_split(
 
 gen = PaddedGraphGenerator(graphs=graphs)
 
-train_gen = gen.flow(
+train_gen = gen.flow( # should this be gen or generator
     list(train_graphs.index - 1),
     targets=train_graphs.values,
     batch_size=50,
@@ -238,10 +238,10 @@ test_gen = gen.flow(
     symmetric_normalization=False,
 )
 
-epochs = 10
+epochs = 100
 
-history = model.fit(
-    train_gen, epochs=epochs, verbose=1, validation_data=test_gen, shuffle=True,
+history = model.fit( # changing verbose over 2 removes cool ui
+    train_gen, epochs=epochs, verbose=2, validation_data=test_gen, shuffle=False,
 )
 
 sg.utils.plot_history(history)
