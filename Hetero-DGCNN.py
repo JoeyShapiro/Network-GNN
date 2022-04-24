@@ -30,6 +30,7 @@ import networkx as nx
 import os
 
 def build_hetero_graph(file):
+    print('Loading graph from', file)
     g = nx.Graph() # would use DGL, but kinda bad
     with open(file) as f: # for now convert to index list by hand
         network_data=[tuple(line) for line in csv.reader(f)]
@@ -66,15 +67,15 @@ def build_hetero_graph(file):
         cnts.append(int(str_tup[5]))
         cnts.append(int(str_tup[5])) # for each edge
 
-        node_labels[int(str_tup[0])] = 'ip' # smart
+        node_labels[int(str_tup[0])] = 'node' # smart
         node_colors[int(str_tup[0])] = [[.7, .7, .7]]
-        node_features[int(str_tup[0])] = [1]
-        node_labels[int(str_tup[1])] = 'conn'
+        node_features[int(str_tup[0])] = {'type': 'ip', 'feature': [1]}
+        node_labels[int(str_tup[1])] = 'node' #'conn'
         node_colors[int(str_tup[1])] = [[0, 1, 0]]
-        node_features[int(str_tup[1])] = [str_tup[3]]
-        node_labels[int(str_tup[2])] = 'ip'
+        node_features[int(str_tup[1])] = {'type': 'conn', 'feature': [str_tup[3]]} # 1 is ip 2 is conn
+        node_labels[int(str_tup[2])] = 'node'
         node_colors[int(str_tup[2])] = [[.7, .7, .7]]
-        node_features[int(str_tup[0])] = [1]
+        node_features[int(str_tup[2])] = {'type': 'ip', 'feature': [1]}
     src, dst = tuple(zip(*edges))
 
     # get colors for a heatmap
@@ -97,7 +98,7 @@ def build_hetero_graph(file):
     g.add_weighted_edges_from(weighted_edges)
     # nx.set_node_attributes(g, )
     nx.set_node_attributes(g, node_labels, "label")
-    nx.set_node_attributes(g, node_features, "feature")
+    nx.set_node_attributes(g, node_features)
     nx.set_edge_attributes(g, edge_colors, "color") # for the heatmap
 
     return (g, heatmap, node_colors)
@@ -145,33 +146,9 @@ print('Loading graphs')
 graphs = []
 for nx_G in nx_Gs:
     g_feature_attr = nx_G.copy()
+    print('Loading new graph from networkx')
     for node_id, node_data in g_feature_attr.nodes(data=True):
         print(node_data)
-    graphs.append(StellarGraph.from_networkx(g_feature_attr, node_features="feature"))
-
-#graphs, graph_labels = dataset.load()
-print(graphs[0].info())
-
-summary = pd.DataFrame(
-    [(g.number_of_nodes(), g.number_of_edges()) for g in graphs],
-    columns=["nodes", "edges"],
-)
-summary.describe().round(1)
-
-# ///////////////// LOAD GRAPHS /////////////////
-print('Loading graphs')
-
-def compute_features(node_id):
-    # in general this could compute something based on other features, but for this example,
-    # we don't have any other features, so we'll just do something basic with the node_id
-    return [int(node_id), 1]
-
-# /////////////// get features /////////////////
-graphs = []
-for nx_G in nx_Gs:
-    g_feature_attr = nx_G.copy()
-    for node_id, node_data in g_feature_attr.nodes(data=True):
-        node_data["feature"] = compute_features(node_id)
     graphs.append(StellarGraph.from_networkx(g_feature_attr, node_features="feature"))
 
 graph_labels = pd.Series(labels, copy=False) # 2 = mal, 1 = good, i think
