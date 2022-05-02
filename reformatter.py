@@ -1,8 +1,8 @@
 import csv
 import numpy as np
 
-in_file = '/Volumes/T7 Touch/ITS472/project 2/dataset/mal/conn.log.labeled4.csv'
-out_file = open('/Volumes/T7 Touch/ITS472/project 2/dataset/mal/conn.log.labeled_reformatted4.csv', 'w')
+in_file = '/Users/oniichan/Downloads/SUEE1.csv.csv'
+out_file = open('/Users/oniichan/Downloads/SUEE1_reformatted.csv.csv', 'w')
 unlinked = []
 
 with open(in_file) as f: # for now convert to index list by hand
