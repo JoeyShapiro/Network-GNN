@@ -259,3 +259,11 @@ target_encoding.fit(graph_labels)
 graph_predictions = target_encoding.inverse_transform(all_predictions.squeeze())
 df = pd.DataFrame({"Predicted": graph_predictions, "True": graph_labels[2].values.tolist()})
 print(df.head(20))
+
+# SAVING
+print("saving model")
+tf.saved_model.save(model, './first.mdl')
+
+# load
+print('loading model')
+imported = tf.saved_model.load('./first.mdl')
